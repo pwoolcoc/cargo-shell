@@ -1,0 +1,19 @@
+[package]
+authors = ["Paul Woolcock <paul@woolcock.us>"]
+name = "cargo-shell"
+version = "0.1.0"
+
+[[bin]]
+name = "cargo-shell"
+path = "src/bin/shell.rs"
+
+[dependencies]
+cargo = "0.14.0"
+env_logger = "0.3.5"
+error-chain = "0.6.1"
+log = "0.3.6"
+rustyline = "1.0.0"
+
+[lib]
+name = "shell"
+path = "src/lib.rs"

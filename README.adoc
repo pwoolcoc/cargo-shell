@@ -1,0 +1,193 @@
+= cargo-shell
+:toc:
+
+== Introduction
+
+`cargo shell` is a command shell for `cargo`, inspired by `sbt`. It incorporates a number of existing tools, along with some additional features, to make
+developing rust applications a little nicer.
+
+== Installation
+
+`cargo-shell` makes liberal use of the tools you probably already have installed, so it expects that you have a working `rust` installation (obviously) as
+well as `rustup.rs`.
+
+----
+$ cargo install cargo-shell
+----
+
+== Usage
+
+After installation, the shell can be started by running `cargo shell` on the command line:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> build
+...output
+>> test
+...output
+>> bench
+...output
+----
+
+...etc
+
+== Is that...it?
+
+At this point, we don't really have a lot of advantages over just aliasing `cargo` to `c` and running `c build`, etc. However, `cargo-shell` comes with a few built-in
+features that make it more useful.
+
+=== `cargo-watch` integration
+
+If you have `cargo-watch` installed on your system, you can cause any command to be re-run when the source files change. This is done by prepending a `~` to the command:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> ~run
+Hello, World!
+Waiting for changes... Hit Ctrl-C to stop.
+----
+
+=== Running a command using a different toolchain
+
+`rustup` is great for letting us run commands using different versions of rust. The command to do this, however, can get a bit verbose. Sure, aliases can help. But
+with the command shell, running a command with a different toolchain is simple:
+
+Let's say you are using the `stable` toolchain, but want to test using nightly:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> build
+   # builds using `stable`
+>> ++nightly test
+   # tests using `nightly`
+----
+
+After the `cargo test` command is done running, the shell will go back to using the `stable` toolchain again. To permanently change it in the shell, just leave the command
+off the end:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> ++nightly
+>> do build, test
+   # shell remains in nightly until you change it back manually
+----
+
+=== Running a command under multiple toolchains
+
+Let's say we want to run the tests for a project under `stable`, `beta`, and `nightly` (which are the default, though this is configurable):
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> +test
+----
+
+...and that's it! There is a config option, `cargo-shell.toolchains` that will let you customize the list of toolchains that this runs.
+
+=== Running a list of commands from a file
+
+The `<` operator will let you run a series of commands from a file. For example, this file:
+
+.test-file
+----
+build
+test
+bench
+----
+
+Can be run like this:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> < test-file
+----
+
+and the `build`, `test` and `bench` commands will be run in sequence
+
+
+=== Changing the prompt mid-session
+
+The prompt can be changed permanently in your config, but if you want to change it mid-session, you can use the `p` command:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> p $
+$
+----
+
+One limitation is that leading & trailing whitespace is trimmed, so if you want a space at the end of your prompt, use quotes:
+
+----
+$ cargo shell
+Welcome to cargo-shell v0.1.0
+>> p "$ "
+$ # now there is a space here
+----
+
+== Configuration
+
+There are a few configuration options available to customize `cargo-shell`. You put them in a `.cargo/config` file under the `[cargo-shell]`
+heading.
+
+=== Prompt
+
+This will customize the look of the shell prompt. There are a few placeholders that you can use: `{project}`, `{version}` and `{toolchain}`.
+After every command, `cargo-shell` will replace them with the project name, project version, and current toolchain, respectively.
+
+For example, to end up with a prompt like `"my-project stable>> "`, you would set the prompt to this:
+
+[source,toml]
+..cargo/config
+----
+[cargo-shell]
+prompt = "{project} {toolchain}>> "
+----
+
+By default it is just:
+
+[source,toml]
+..cargo/config
+----
+[cargo-shell]
+prompt = ">> "
+----
+
+=== Default toolchain
+
+This is the toolchain that the shell will start using by default.
+
+NOTE: This will be going away as soon as I get better integration with `rustup`s overrides in place. At that point,
+`cargo-shell` will use the same default toolchain as `rustup`, and will respect any overrides that you have put in
+place using `rustup`.
+
+[source,toml]
+..cargo/config
+----
+[cargo-shell]
+default_toolchain = "stable"
+-----
+
+=== Toolchain list
+
+This will customize the toolchains that a command is run under when using the `+` shell command.
+
+[source,toml]
+..cargo/config
+----
+[cargo-shell]
+toolchains = ["stable", "beta", "nightly"]
+----
+
+== TODO
+
+  - [x] Documentation
+  - [ ] Detect toolchain default & overrides from rustup
+  - [ ] Shell history
+  - [ ] git integration for the prompt
+  - [ ] autocomplete
