@@ -2,6 +2,12 @@
 authors = ["Paul Woolcock <paul@woolcock.us>"]
 name = "cargo-shell"
 version = "0.1.0"
+repository = "https://github.com/pwoolcoc/cargo-shell"
+homepage = "https://github.com/pwoolcoc/cargo-shell"
+license = "MIT/Apache-2.0"
+description = """
+Simple command shell for cargo
+"""
 
 [[bin]]
 name = "cargo-shell"
