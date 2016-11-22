@@ -142,8 +142,7 @@ After every command, `cargo-shell` will replace them with the project name, proj
 
 For example, to end up with a prompt like `"my-project stable>> "`, you would set the prompt to this:
 
-[source,toml]
-..cargo/config
+.".cargo/config"
 ----
 [cargo-shell]
 prompt = "{project} {toolchain}>> "
@@ -151,8 +150,7 @@ prompt = "{project} {toolchain}>> "
 
 By default it is just:
 
-[source,toml]
-..cargo/config
+.".cargo/config"
 ----
 [cargo-shell]
 prompt = ">> "
@@ -162,23 +160,21 @@ prompt = ">> "
 
 This is the toolchain that the shell will start using by default.
 
-NOTE: This will be going away as soon as I get better integration with `rustup`s overrides in place. At that point,
+NOTE: This will be going away as soon as I get better integration with rustup's overrides in place. At that point,
 `cargo-shell` will use the same default toolchain as `rustup`, and will respect any overrides that you have put in
 place using `rustup`.
 
-[source,toml]
-..cargo/config
+.".cargo/config"
 ----
 [cargo-shell]
 default_toolchain = "stable"
------
+----
 
 === Toolchain list
 
 This will customize the toolchains that a command is run under when using the `+` shell command.
 
-[source,toml]
-..cargo/config
+.cargo/config
 ----
 [cargo-shell]
 toolchains = ["stable", "beta", "nightly"]
