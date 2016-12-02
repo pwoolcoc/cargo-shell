@@ -1,13 +1,11 @@
 [package]
 authors = ["Paul Woolcock <paul@woolcock.us>"]
-name = "cargo-shell"
-version = "0.1.0"
-repository = "https://github.com/pwoolcoc/cargo-shell"
+description = "Simple command shell for cargo\n"
 homepage = "https://github.com/pwoolcoc/cargo-shell"
 license = "MIT/Apache-2.0"
-description = """
-Simple command shell for cargo
-"""
+name = "cargo-shell"
+repository = "https://github.com/pwoolcoc/cargo-shell"
+version = "0.1.0"
 
 [[bin]]
 name = "cargo-shell"
@@ -16,7 +14,7 @@ path = "src/bin/shell.rs"
 [dependencies]
 cargo = "0.14.0"
 env_logger = "0.3.5"
-error-chain = "0.6.1"
+error-chain = "0.7.1"
 log = "0.3.6"
 rustyline = "1.0.0"
 
