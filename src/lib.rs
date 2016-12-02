@@ -3,6 +3,8 @@ extern crate cargo;
 #[macro_use] extern crate error_chain;
 #[macro_use] extern crate log;
 
+mod errors;
+
 use std::fs::File;
 use std::io::{stderr, Write, BufReader, BufRead};
 use std::process::{Command, Stdio};
@@ -16,8 +18,6 @@ use cargo::util::Config as CargoConfig;
 use cargo::util::important_paths::{find_root_manifest_for_wd};
 
 use errors::*;
-
-mod errors;
 
 const USAGE: &'static str = r#"Cargo Command Shell
 -------------------
@@ -58,7 +58,7 @@ struct Config {
 
 impl Config {
     fn prompt(cconfig: &CargoConfig) -> Result<String> {
-        let prompt = cconfig.get_string("cargo-shell.prompt")?;
+        let prompt= cconfig.get_string("cargo-shell.prompt").chain_err(|| "Could not find cargo-shell.prompt")?;
         let prompt = match prompt {
             Some(prompt) => prompt.val,
             None => ">> ".to_string()
@@ -76,7 +76,7 @@ impl Config {
     }
 
     fn default_toolchain(cconfig: &CargoConfig) -> Result<String> {
-        let def = cconfig.get_string("cargo-shell.default-toolchain")?;
+        let def = cconfig.get_string("cargo-shell.default-toolchain").chain_err(|| "Could not find cargo-shell.default-toolchain")?;
         let def = match def {
             Some(d) => d.val,
             None => DEFAULT_TOOLCHAIN.into(),
@@ -85,13 +85,13 @@ impl Config {
     }
 
     fn get_name_and_version(cconfig: &CargoConfig) -> Result<(String, String)> {
-        let manifest = find_root_manifest_for_wd(None, cconfig.cwd())?;
-        let pkg = Package::for_path(&manifest, cconfig)?;
+        let manifest = find_root_manifest_for_wd(None, cconfig.cwd()).chain_err(|| "Could not find root manifest for project")?;
+        let pkg = Package::for_path(&manifest, cconfig).chain_err(|| "Could not get package path for current crate")?;
         Ok((pkg.name().into(), pkg.version().to_string()))
     }
 
     fn get_toolchains(cconfig: &CargoConfig) -> Result<Vec<String>> {
-        let toolchains = cconfig.get_list("cargo-shell.toolchains")?;
+        let toolchains = cconfig.get_list("cargo-shell.toolchains").chain_err(|| "Could not get cargo-shell.toolchains value")?;
         let toolchains = match toolchains {
             Some(toolchains) => toolchains.val.into_iter().map(|(s, _p)| s).collect::<Vec<_>>(),
             None => vec!["stable".into(), "beta".into(), "nightly".into()],
@@ -100,7 +100,7 @@ impl Config {
     }
 
     fn new() -> Result<Config> {
-        let cconfig = CargoConfig::default()?;
+        let cconfig = CargoConfig::default().chain_err(|| "Could not get default CargoConfig")?;
         let (name, version) = Config::get_name_and_version(&cconfig)?;
         let prompt = Config::prompt(&cconfig)?;
 
@@ -180,9 +180,11 @@ fn dispatch_cmd(config: &mut Config, cmd: &str) -> Result<()> {
     } else if cmd.starts_with("<") {
         // < filename
         // run commands from file `filename`
-        let file = BufReader::new(File::open(&cmd[1..].trim())?);
+        let file = &cmd[1..].trim();
+        let file = File::open(file).chain_err(|| format!("Could not open filename {}", file))?;
+        let file = BufReader::new(file);
         for line in file.lines() {
-            let line = line?;
+            let line = line.chain_err(|| "Could not get next line from file")?;
             let line = line.trim();
             if line == "" || line.starts_with("#") {
                 continue;
@@ -238,6 +240,7 @@ fn run(config: &Config, cmd: &[&str]) -> Result<()> {
                         .arg("cargo")
                         .args(cmd)
                         .current_dir(&config.cwd)
-                        .status()?;
+                        .status()
+                        .chain_err(|| "Could not execute rustup run command")?;
     Ok(())
 }
