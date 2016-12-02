@@ -99,12 +99,32 @@ impl Config {
         Ok(toolchains)
     }
 
+    fn find_rustup() -> Result<PathBuf> {
+        let cargo_home = env::var("CARGO_HOME").chain_err(|| "CARGO_HOME environment variable not set")?;
+        let rustup = Path::new(&cargo_home).join("bin").join("rustup");
+        if rustup.exists() {
+            return Ok(rustup.into());
+        } else {
+            // I'll need a solution for windows here, too
+            let path = env::var("PATH").chain_err(|| "PATH environment variable not set")?;
+            let paths = path.split(':');
+            for p in paths {
+                let rustup = Path::new(p).join("rustup");
+                if rustup.exists() {
+                    return Ok(rustup.into());
+                }
+            }
+        }
+        bail!("Could not find a rustup binary");
+    }
+
     fn new() -> Result<Config> {
         let cconfig = CargoConfig::default().chain_err(|| "Could not get default CargoConfig")?;
         let (name, version) = Config::get_name_and_version(&cconfig)?;
         let prompt = Config::prompt(&cconfig)?;
 
-        let rustup = Path::new(&env::var("CARGO_HOME")?).join("bin").join("rustup");
+        let rustup = Config::find_rustup().chain_err(|| "Could not find a `rustup` binary")?;
+        debug!("rustup binary found at {:?}", rustup.to_string_lossy());
 
         let default_toolchain = Config::default_toolchain(&cconfig)?;
 
